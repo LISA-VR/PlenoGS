@@ -420,9 +420,9 @@ notably with a single input image.
           <div class="column is-four-fifths">
             <p style="text-align: left; margin-bottom: 1cm;">
                 <br>
-                <b style="font-size: 15pt!important;">1. Plenoptic projection model</b>
+                <b style="font-size: 15pt!important;">Training Pipeline</b>
                 <br>
-                We derive a differentiable plenoptic projection model that maps 3D Gaussians through both the main lens and the micro-lens array.
+                We implemented a virtual plenoptic camera in the 3DGS framework to train directly on raw plenoptic images.
             </p>
             <img src="static/images/pipelineplenoGS.png" alt="PlenoGS pipeline" loading="lazy"/>
           </div>
@@ -435,7 +435,190 @@ notably with a single input image.
   <div class="hero-body">
     <div class="container">
         <h2 class="title is-3" style="text-align: center;">Implementation of Differentiable Rendering</h2>
-        
+        <div class="columns is-centered has-text-centered is-multiline">
+          <div class="column is-full">
+            <p style="text-align: left; margin-bottom: 1cm;">
+                <br>
+                <b style="font-size: 15pt!important;">1. Plenoptic projection model</b>
+                <br>
+                We derive a differentiable plenoptic projection model that maps 3D Gaussians through both the main lens and the micro-lens array.
+            </p>
+            <img src="static/images/projection_gaussian.png" alt="projection_model" loading="lazy"/>
+          </div>
+          <div class="column is-full">
+            <p style="text-align: left; margin-bottom: 1cm;">
+                <br>
+                <b style="font-size: 15pt!important;">2. Mapping Gaussians to Microlenses</b>
+                <br>
+                Microlenses array can contain thousands of microlenses, making it computationally expensive to compute the contribution of each Gaussian to every microlens.
+                <br>
+                To address this, we introduce a mapping strategy that efficiently determines in which microlenses each Gaussian is projected.
+                <br>
+                We find the closest microlens to the virtual Gaussian projected through the main lens, and then we consider a local neighborhood of microlenses around this closest microlens to compute the contributions of the Gaussian.
+              </p>
+            <img src="static/images/closest_microlens3D.png" alt="projection_model" loading="lazy"/>
+          </div>
+          <div class="column is-full">
+            <p style="text-align: left; margin-bottom: 1cm;">
+                <br>
+                <b style="font-size: 15pt!important;">3. Practical implementation</b>
+                <br>
+                Our method improves the reconstruction of dense scene structure and fine geometric details compared to standard pinhole-based baselines, especially when only a single plenoptic acquisition is available. The following examples illustrate how the raw plenoptic signal is exploited to recover sharper, more consistent novel views.
+            </p>
+            <div class="columns is-centered is-variable is-4">
+              <div class="column is-3">
+                <img src="static/images/scheme_hex.png" alt="PlenoGS vs Gaussian Splatting result 1" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;"/>
+              </div>
+              <div class="column is-3">
+                <img src="static/images/hex_r2.png" alt="PlenoGS vs novel view synthesis result 2" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;"/>
+              </div>
+              <div class="column is-3">
+                <img src="static/images/hexr3.png" alt="Existing novel view synthesis comparison 3" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;"/>
+              </div>
+              <div class="column is-3">
+                <img src="static/images/hexr3masked.png" alt="Existing novel view synthesis comparison 4" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;"/>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3" style="text-align: center;">Metrics</h2>
+    <div class="columns is-variable is-5 is-multiline">
+      <div class="column is-12-mobile is-6-desktop">
+        <div class="content" style="overflow-x: auto;">
+          <table class="table is-narrow is-fullwidth is-striped is-hoverable" style="margin: 0 auto;">
+            <caption style="caption-side: top; text-align: center; font-weight: 600; margin-bottom: 0.75rem;">
+              Training metrics for varying $R$ values on the Fujita dataset.
+            </caption>
+            <thead>
+              <tr>
+                <th><strong>R</strong></th>
+                <th><strong>PSNR</strong></th>
+                <th><strong>SSIM</strong></th>
+                <th><strong>LPIPS</strong></th>
+                <th><strong>#Gaussians</strong></th>
+                <th><strong>VRAM</strong></th>
+                <th><strong>Time</strong></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>18.549</td>
+                <td>0.482</td>
+                <td>0.181</td>
+                <td>3,871,935</td>
+                <td>2.86 GB</td>
+                <td>5m 32s</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>20.214</td>
+                <td>0.565</td>
+                <td>0.153</td>
+                <td>630,822</td>
+                <td>1.86 GB</td>
+                <td>4m 50s</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>20.949</td>
+                <td>0.609</td>
+                <td>0.140</td>
+                <td>270,516</td>
+                <td>1.90 GB</td>
+                <td>4m 58s</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>21.014</td>
+                <td>0.612</td>
+                <td>0.141</td>
+                <td>160,407</td>
+                <td>1.97 GB</td>
+                <td>5m 14s</td>
+              </tr>
+              <tr>
+                <td><strong>5</strong></td>
+                <td><strong>21.022</strong></td>
+                <td><strong>0.620</strong></td>
+                <td><strong>0.137</strong></td>
+                <td>99,789</td>
+                <td>1.99 GB</td>
+                <td>5m 21s</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>20.945</td>
+                <td>0.602</td>
+                <td>0.144</td>
+                <td>65,878</td>
+                <td>2.01 GB</td>
+                <td>5m 24s</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="column is-12-mobile is-6-desktop">
+        <div class="content" style="overflow-x: auto;">
+          <table class="table is-narrow is-fullwidth is-striped is-hoverable" style="margin: 0 auto;">
+            <caption style="caption-side: top; text-align: center; font-weight: 600; margin-bottom: 0.75rem;">
+              Evaluation metrics on all trained datasets.
+            </caption>
+            <thead>
+              <tr>
+                <th><strong>Dataset</strong></th>
+                <th><strong>PSNR</strong></th>
+                <th><strong>SSIM</strong></th>
+                <th><strong>LPIPS</strong></th>
+                <th><strong>Time</strong></th>
+                <th><strong>#Gaussians</strong></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fujita</td>
+                <td>21.17</td>
+                <td>0.61</td>
+                <td>0.14</td>
+                <td>5m 36s</td>
+                <td>49,555</td>
+              </tr>
+              <tr>
+                <td>Rabbit</td>
+                <td>23.95</td>
+                <td>0.65</td>
+                <td>0.14</td>
+                <td>10m 33s</td>
+                <td>55,591</td>
+              </tr>
+              <tr>
+                <td>Temple Boat (1k)</td>
+                <td>21.25</td>
+                <td>0.59</td>
+                <td>0.28</td>
+                <td>9m 48s</td>
+                <td>94,063</td>
+              </tr>
+              <tr>
+                <td>Cubes</td>
+                <td>14.49</td>
+                <td>0.162</td>
+                <td>0.407</td>
+                <td>5m 07s</td>
+                <td>38,573</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -445,8 +628,26 @@ notably with a single input image.
   <div class="hero-body">
     <div class="container">
         <h2 class="title is-3" style="text-align: center;">Visual Comparison</h2>
-    
-      
+        <div class="columns is-centered has-text-centered is-multiline">
+          <div class="column is-full">
+            <p style="text-align: left; margin-bottom: 1cm;">
+                <br>
+                <b style="font-size: 15pt!important;">1. Comparison with existing pipeline</b>
+                <br>
+                We compare our plenoptic-aware training strategy against standard Gaussian Splatting baselines trained on conventional pinhole-style inputs.
+            </p>
+            <img src="static/images/plenogs_vs_GS.png" alt="comparison with Gaussian Splatting" loading="lazy" style="width: 80%; height: auto; border-radius: 8px;"/>
+          </div>
+          <div class="column is-full">
+            <p style="text-align: left; margin-bottom: 1cm;">
+                <br>
+                <b style="font-size: 15pt!important;">2. Comparison with existing plenoptic Novel View Synthesis</b>
+                <br>
+                We further evaluate the renderings against existing plenoptic novel view synthesis approaches to highlight the benefit of training directly on raw plenoptic images.
+            </p>
+            <img src="static/images/comp_existing.png" alt="comparison with existing methods" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;"/>
+          </div>
+        </div>
     </div>
   </div>
 </section>
